@@ -38,6 +38,29 @@ jobs:
         inlineScript: |
           az account show
           
+    - name: Remove Azure Resource Locks
+      uses: Azure/cli@v2.2.0
+      with:
+        inlineScript: |
+          echo "Removing Azure resource locks..."
+    
+          for rg in $(az group list --query "[].name" -o tsv); do
+            echo "Checking locks in Resource Group: $rg"
+    
+            locks=$(az lock list \
+              --resource-group "$rg" \
+              --query "[].id" \
+              -o tsv)
+    
+            for lock in $locks; do
+              echo "Deleting lock: $lock"
+              az lock delete --ids "$lock"
+            done
+          done
+    
+          echo "All Resource Group locks removed."
+
+   
     - name: Delete Azure Resource Groups
       uses: Azure/cli@v2.2.0
       with:
