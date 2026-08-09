@@ -60,6 +60,8 @@ jobs:
     
           echo "All Resource Group locks removed."
 
+          echo "Waiting 60 seconds for Azure lock changes to propagate..."
+          sleep 60
    
     - name: Delete Azure Resource Groups
       uses: Azure/cli@v2.2.0
