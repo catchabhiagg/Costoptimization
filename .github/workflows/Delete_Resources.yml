@@ -1,0 +1,53 @@
+name: Delete Azure Resources to Reduce Billing in Trial Account
+
+on:
+  schedule:
+    - cron: 0 19 * * *
+# ┌───────────── minute (0 - 59)
+# │ ┌───────────── hour (0 - 23)
+# │ │ ┌───────────── day of the month (1 - 31)
+# │ │ │ ┌───────────── month (1 - 12 or JAN-DEC)
+# │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+# │ │ │ │ │
+# * * * * *
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  delete-resources:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout branch ${{ github.ref_name }}
+      uses: actions/checkout@v6.0.2
+      
+    - name: Azure Login
+      uses: Azure/login@v2.3.0
+      with:
+        client-id: ${{ secrets.CLIENT_ID }}
+        tenant-id: ${{ secrets.TENANT_ID }}
+        subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
+
+    - name: Check Current Azure Account
+      uses: Azure/cli@v2.2.0
+      with:
+        # Specify the script here
+        inlineScript: |
+          az account show
+          
+    - name: Delete Azure Resource Groups
+      uses: Azure/cli@v2.2.0
+      with:
+        # Specify the script here
+        inlineScript: |
+          for rg in $(az group list --query "[].name" -o tsv); do
+            echo "Deleting resource group: $rg"
+            az group delete --name "$rg" --yes --no-wait
+          done
+    
+        
+   
+  
